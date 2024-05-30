@@ -1,0 +1,294 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace RecipeApp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            RecipeManager recipeManager = new RecipeManager();
+            bool continueEditing = true;
+
+            while (continueEditing)
+            {
+                Console.WriteLine("===================================");
+                Console.WriteLine("Welcome to the Recipe App!");
+                Console.WriteLine("1. Add new recipe");
+                Console.WriteLine("2. List all recipes");
+                Console.WriteLine("3. Display a recipe");
+                Console.WriteLine("4. Scale recipe");
+                Console.WriteLine("5. Reset recipe quantities");
+                Console.WriteLine("6. Clear all recipes");
+                Console.WriteLine("7. Exit");
+                Console.WriteLine("===================================");
+
+                Console.Write("Select an option: ");
+                string choice = Console.ReadLine();
+                Console.WriteLine();
+
+                switch (choice)
+                {
+                    case "1":
+                        recipeManager.AddRecipe();
+                        break;
+                    case "2":
+                        recipeManager.ListRecipes();
+                        break;
+                    case "3":
+                        recipeManager.DisplayRecipe();
+                        break;
+                    case "4":
+                        recipeManager.ScaleRecipe();
+                        break;
+                    case "5":
+                        recipeManager.ResetRecipeQuantities();
+                        break;
+                    case "6":
+                        recipeManager.ClearAllRecipes();
+                        break;
+                    case "7":
+                        continueEditing = false;
+                        break;
+                    default:
+                        Console.WriteLine("Invalid option. Please enter a number from 1 to 7.");
+                        break;
+                }
+            }
+        }
+    }
+
+    class RecipeManager
+    {
+        private List<Recipe> recipes;
+
+        public RecipeManager()
+        {
+            recipes = new List<Recipe>();
+        }
+
+        public void AddRecipe()
+        {
+            Recipe recipe = new Recipe();
+            recipe.EnterDetails();
+            recipes.Add(recipe);
+            Console.WriteLine("Recipe added successfully!");
+        }
+
+        public void ListRecipes()
+        {
+            if (recipes.Count == 0)
+            {
+                Console.WriteLine("No recipes available.");
+                return;
+            }
+
+            var sortedRecipes = recipes.OrderBy(r => r.Name).ToList();
+            Console.WriteLine("Recipes:");
+            for (int i = 0; i < sortedRecipes.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. {sortedRecipes[i].Name}");
+            }
+        }
+
+        public void DisplayRecipe()
+        {
+            ListRecipes();
+            if (recipes.Count == 0) return;
+
+            Console.Write("Select a recipe to display by number: ");
+            int index = int.Parse(Console.ReadLine()) - 1;
+
+            if (index >= 0 && index < recipes.Count)
+            {
+                recipes[index].Display();
+            }
+            else
+            {
+                Console.WriteLine("Invalid selection.");
+            }
+        }
+
+        public void ScaleRecipe()
+        {
+            ListRecipes();
+            if (recipes.Count == 0) return;
+
+            Console.Write("Select a recipe to scale by number: ");
+            int index = int.Parse(Console.ReadLine()) - 1;
+
+            if (index >= 0 && index < recipes.Count)
+            {
+                recipes[index].Scale();
+            }
+            else
+            {
+                Console.WriteLine("Invalid selection.");
+            }
+        }
+
+        public void ResetRecipeQuantities()
+        {
+            ListRecipes();
+            if (recipes.Count == 0) return;
+
+            Console.Write("Select a recipe to reset quantities by number: ");
+            int index = int.Parse(Console.ReadLine()) - 1;
+
+            if (index >= 0 && index < recipes.Count)
+            {
+                recipes[index].ResetQuantities();
+            }
+            else
+            {
+                Console.WriteLine("Invalid selection.");
+            }
+        }
+
+        public void ClearAllRecipes()
+        {
+            recipes.Clear();
+            Console.WriteLine("All recipes cleared.");
+        }
+    }
+
+    class Recipe
+    {
+        public string Name { get; private set; }
+        private List<Ingredient> ingredients;
+        private List<string> steps;
+        private double totalCalories;
+
+        public delegate void CalorieNotification(string message);
+        public event CalorieNotification NotifyCalories;
+
+        public Recipe()
+        {
+            ingredients = new List<Ingredient>();
+            steps = new List<string>();
+            NotifyCalories += message => Console.WriteLine(message);
+        }
+
+        public void EnterDetails()
+        {
+            Console.Write("Enter the name of the recipe: ");
+            Name = Console.ReadLine();
+
+            Console.Write("Enter the number of ingredients: ");
+            int ingredientCount = int.Parse(Console.ReadLine());
+
+            for (int i = 0; i < ingredientCount; i++)
+            {
+                Console.WriteLine($"Enter details for ingredient #{i + 1}:");
+                Console.Write("Name: ");
+                string ingredientName = Console.ReadLine();
+                Console.Write("Quantity: ");
+                double quantity = double.Parse(Console.ReadLine());
+                Console.Write("Unit of measurement: ");
+                string unit = Console.ReadLine();
+                Console.Write("Calories: ");
+                double calories = double.Parse(Console.ReadLine());
+                Console.Write("Food group: ");
+                string foodGroup = Console.ReadLine();
+
+                ingredients.Add(new Ingredient(ingredientName, quantity, unit, calories, foodGroup));
+                totalCalories += calories;
+            }
+
+            Console.Write("Enter the number of steps: ");
+            int stepCount = int.Parse(Console.ReadLine());
+
+            for (int i = 0; i < stepCount; i++)
+            {
+                Console.Write($"Enter step #{i + 1}: ");
+                steps.Add(Console.ReadLine());
+            }
+
+            if (totalCalories > 300)
+            {
+                NotifyCalories?.Invoke("Warning: Total calories exceed 300!");
+            }
+
+            Console.WriteLine("Recipe details entered successfully!");
+        }
+
+        public void Display()
+        {
+            Console.WriteLine($"Recipe: {Name}");
+            Console.WriteLine("Ingredients:");
+            foreach (var ingredient in ingredients)
+            {
+                Console.WriteLine($"- {ingredient.Quantity} {ingredient.Unit} of {ingredient.Name} ({ingredient.Calories} calories, {ingredient.FoodGroup})");
+            }
+            Console.WriteLine("Steps:");
+            foreach (var step in steps)
+            {
+                Console.WriteLine($"- {step}");
+            }
+            Console.WriteLine($"Total Calories: {totalCalories}");
+        }
+
+        public void Scale()
+        {
+            Console.Write("Enter scaling factor (0.5, 2, or 3): ");
+            double factor = double.Parse(Console.ReadLine());
+
+            totalCalories = 0; // Reset total calories
+            foreach (var ingredient in ingredients)
+            {
+                ingredient.Quantity *= factor;
+                totalCalories += ingredient.Calories * factor; // Recalculate total calories
+            }
+
+            if (totalCalories > 300)
+            {
+                NotifyCalories?.Invoke("Warning: Total calories exceed 300!");
+            }
+
+            Console.WriteLine($"Recipe scaled by a factor of {factor}.");
+        }
+
+        public void ResetQuantities()
+        {
+            totalCalories = 0; // Reset total calories
+            foreach (var ingredient in ingredients)
+            {
+                ingredient.ResetQuantity();
+                totalCalories += ingredient.Calories; // Recalculate total calories
+            }
+
+            if (totalCalories > 300)
+            {
+                NotifyCalories?.Invoke("Warning: Total calories exceed 300!");
+            }
+
+            Console.WriteLine("Quantities reset to original values.");
+        }
+    }
+
+    class Ingredient
+    {
+        public string Name { get; }
+        public double Quantity { get; set; }
+        public double OriginalQuantity { get; }
+        public string Unit { get; }
+        public double Calories { get; }
+        public string FoodGroup { get; }
+
+        public Ingredient(string name, double quantity, string unit, double calories, string foodGroup)
+        {
+            Name = name;
+            Quantity = quantity;
+            OriginalQuantity = quantity;
+            Unit = unit;
+            Calories = calories;
+            FoodGroup = foodGroup;
+        }
+
+        public void ResetQuantity()
+        {
+            Quantity = OriginalQuantity;
+        }
+    }
+}
