@@ -41,3 +41,8 @@ Follow the on-screen instructions to interact with the application.
 
 ## Link to GitHub Repository
 https://github.com/WoLF915/POE-Part-2
+
+
+## Changes Made from Recommendations By Lecturer
+
+- ** They were not many changes that were commented by the lecturer for the first part of the POE. The only change that I can remeber is how seemless the lecturer wanted the end part of the code to run instead of it crashing when it came time to exit the application. That change has been added and resolved. The main changes come with the addition of part 2's instructions and recommendations.
